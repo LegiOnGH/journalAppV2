@@ -1,8 +1,10 @@
 package com.example.legion.journalApp2.controller;
 
+import com.example.legion.journalApp2.dto.request.LoginRequestDTO;
 import com.example.legion.journalApp2.dto.request.SignupRequestDTO;
+import com.example.legion.journalApp2.dto.response.AuthResponseDTO;
 import com.example.legion.journalApp2.dto.response.UserResponseDTO;
-import com.example.legion.journalApp2.service.UserService;
+import com.example.legion.journalApp2.service.AuthService;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +20,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponseDTO> signup(@RequestBody @Valid SignupRequestDTO request) throws BadRequestException {
-        UserResponseDTO response = userService.signup(request);
+    public ResponseEntity<UserResponseDTO> signup(@RequestBody @Valid SignupRequestDTO requestDTO) throws BadRequestException {
+        UserResponseDTO response = authService.signup(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid LoginRequestDTO requestDTO){
+        return ResponseEntity.ok(authService.login(requestDTO));
     }
 }
