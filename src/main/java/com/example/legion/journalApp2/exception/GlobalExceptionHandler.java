@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +33,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
+    //Access forbidden : 403
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDenied(AccessDeniedException ex){
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
     //Not Found : 404
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String , String>> handleNotFound(ResourceNotFoundException ex){
@@ -41,15 +47,5 @@ public class GlobalExceptionHandler {
         response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
         response.put("timestamp", String.valueOf(LocalDateTime.now()));
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-
-    //Fallback : 500
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String >> handleGeneric(Exception ex){
-        Map<String, String > response = new HashMap<>();
-        response.put("message","something went wrong");
-        response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-        response.put("timestamp", String.valueOf(LocalDateTime.now()));
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
