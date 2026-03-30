@@ -81,8 +81,8 @@ src/main/java
      ├──config  
      ├──controller  
      ├──dto  
-     │  ├──request  
-     │  └──response  
+     │      ├──request  
+     │      └──response  
      ├── entity  
      ├── enums  
      ├──exception   
@@ -145,7 +145,7 @@ Authorization: Bearer <token>
 ## Learning Outcomes
 - Implemented JWT authentication from scratch
 - Understood Spring Security filter chain
-- Learned exception handling deeply 
+- Learned exception handling deeply
 - Built a real-world backend with proper architecture
 
 ---

@@ -8,8 +8,10 @@ import com.example.legion.journalApp2.entity.User;
 import com.example.legion.journalApp2.mapper.UserMapper;
 import com.example.legion.journalApp2.repository.UserRepository;
 import com.example.legion.journalApp2.security.JwtUtil;
-import org.apache.coyote.BadRequestException;
+import com.example.legion.journalApp2.exception.BadRequestException;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,8 @@ public class AuthService {
 
     @Autowired
     private UserRepository userRepository;
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     private final PasswordEncoder passwordEncoder;
 
@@ -36,21 +40,29 @@ public class AuthService {
     }
 
     public UserResponseDTO signup(@NotNull SignupRequestDTO requestDTO) throws BadRequestException {
+        logger.info("Signup request received for username: {}", requestDTO.getUserName());
         Optional<User> existingUser = userRepository.findByUserName(requestDTO.getUserName());
         if(existingUser.isPresent()){
-            throw new BadRequestException("Username already exits.");
+            logger.warn("Duplicate signup attempt for username: {}", requestDTO.getUserName());
+            throw new BadRequestException("Username already exists.");
         }
         User user = userMapper.toEntity(requestDTO);
         user.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
         User savedUser = userRepository.save(user);
+        logger.info("New user created with username: {}", savedUser.getUserName());
         return userMapper.toDTO(savedUser);
     }
     public AuthResponseDTO login(@NotNull LoginRequestDTO requestDTO) throws BadCredentialsException{
         User user = userRepository.findByUserName(requestDTO.getUserName())
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password."));
+                .orElseThrow(() -> {
+                    logger.warn("Login attempt with non-existing username: {}", requestDTO.getUserName());
+                    return new BadCredentialsException("Invalid username or password.");
+                });
         if(!passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())){
+            logger.warn("Failed login attempt for username: {}",requestDTO.getUserName());
             throw new BadCredentialsException("Invalid username or password.");
         }
+        logger.info("User authenticated successfully: {}", user.getUserName());
         String token = jwtUtil.generateToken(user.getUserName());
         return new AuthResponseDTO(token);
     }

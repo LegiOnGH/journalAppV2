@@ -7,12 +7,17 @@ import com.example.legion.journalApp2.exception.BadRequestException;
 import com.example.legion.journalApp2.exception.ResourceNotFoundException;
 import com.example.legion.journalApp2.mapper.UserMapper;
 import com.example.legion.journalApp2.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+
 @Service
 public class UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -30,6 +35,7 @@ public class UserService {
         User user = userRepository.findByUserName(userName).orElseThrow(
                 () -> new ResourceNotFoundException("User not found.")
         );
+        logger.info("Fetching details for user: {}", userName);
         return userMapper.toDTO(user);
     }
 
@@ -37,14 +43,18 @@ public class UserService {
     public void changePassword(ChangePasswordDTO dto){
         String userName = getLoggedInUserName();
         User user = userRepository.findByUserName(userName).orElseThrow(
-                () -> new ResourceNotFoundException("User not found.")
+                () -> {
+                    logger.warn("User not found for username: {}", userName);
+                    return new ResourceNotFoundException("User not found.");
+                }
         );
 
         if(!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())){
+            logger.warn("Incorrect old password attempt for user: {}.", userName);
             throw new BadRequestException("Old password is incorrect.");
         }
-
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        logger.info("Password changed for user: {}", userName);
         userRepository.save(user);
     }
 
