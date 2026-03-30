@@ -6,10 +6,10 @@ import lombok.Data;
 
 @Data
 public class ChangePasswordDTO {
-    @NotBlank
+    @NotBlank(message = "Old password required.")
     private String oldPassword;
 
-    @NotBlank
-    @Size(min=5, max=14)
+    @NotBlank(message = "New password required.")
+    @Size(min=5, max=14, message = "Password must be between 5-14 characters.")
     private String newPassword;
 }

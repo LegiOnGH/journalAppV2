@@ -24,13 +24,13 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> getCurrentUser(){
-        logger.info("Get current user API called.");
+        logger.debug("Fetching current user details.");
         return ResponseEntity.ok(userService.getCurrentUser());
     }
 
     @PostMapping("/changePass")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO dto){
-        logger.info("Change password API called.");
+        logger.info("Password change request received.");
         userService.changePassword(dto);
         return ResponseEntity.ok("Password updated successfully.");
     }

@@ -35,7 +35,7 @@ public class UserService {
         User user = userRepository.findByUserName(userName).orElseThrow(
                 () -> new ResourceNotFoundException("User not found.")
         );
-        logger.info("Fetching details for user: {}", userName);
+        logger.debug("Fetching details for user: {}", userName);
         return userMapper.toDTO(user);
     }
 

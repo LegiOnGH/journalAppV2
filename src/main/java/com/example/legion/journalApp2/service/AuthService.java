@@ -22,8 +22,8 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
+
+    private final UserRepository userRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
@@ -33,7 +33,8 @@ public class AuthService {
 
     private final UserMapper userMapper;
 
-    public AuthService(PasswordEncoder passwordEncoder, JwtUtil jwtUtil, UserMapper userMapper) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, UserMapper userMapper) {
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.userMapper = userMapper;
@@ -55,11 +56,11 @@ public class AuthService {
     public AuthResponseDTO login(@NotNull LoginRequestDTO requestDTO) throws BadCredentialsException{
         User user = userRepository.findByUserName(requestDTO.getUserName())
                 .orElseThrow(() -> {
-                    logger.warn("Login attempt with non-existing username: {}", requestDTO.getUserName());
+                    logger.warn("Invalid login attempt for username: {}", requestDTO.getUserName());
                     return new BadCredentialsException("Invalid username or password.");
                 });
         if(!passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())){
-            logger.warn("Failed login attempt for username: {}",requestDTO.getUserName());
+            logger.warn("Invalid login attempt for username: {}", requestDTO.getUserName());
             throw new BadCredentialsException("Invalid username or password.");
         }
         logger.info("User authenticated successfully: {}", user.getUserName());

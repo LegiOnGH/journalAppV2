@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,14 +30,15 @@ public class JournalController {
     //Create entry
     @PostMapping("/create")
     public ResponseEntity<JournalResponseDTO> create(@RequestBody @Valid JournalRequestDTO dto){
-        logger.info("Create entry API called.");
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        logger.info("Create entry requested by user: {}", userName);
         return ResponseEntity.ok(journalService.createEntry(dto));
     }
 
     //Get entries
     @GetMapping("/getAll")
     public ResponseEntity<List<JournalResponseDTO>> getAll(){
-        logger.info("Fetching all journal entries.");
+        logger.debug("Fetching all journal entries for current user.");
         return ResponseEntity.ok(journalService.getAllEntries());
     }
 
@@ -50,14 +52,14 @@ public class JournalController {
     //Update entry
     @PatchMapping("/update/{id}")
     public ResponseEntity<JournalResponseDTO> update(@PathVariable String id, @RequestBody JournalUpdateDTO dto){
-        logger.info("Update entry called for Id: {}", id);
+        logger.info("Update request received for entry Id: {}", id);
         return ResponseEntity.ok(journalService.updateEntry(id, dto));
     }
 
     //Delete entry
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable String id){
-        logger.info("Delete entry called for Id: {}", id);
+        logger.info("Delete request received for entry Id: {}", id);
         journalService.deleteEntry(id);
         return ResponseEntity.ok("Deleted Successfully.");
     }

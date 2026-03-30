@@ -7,10 +7,10 @@ import lombok.Data;
 @Data
 public class LoginRequestDTO {
 
-    @NotBlank
+    @NotBlank(message = "Username is required.")
     private String userName;
 
-    @NotBlank
-    @Size(min = 5, max = 14)
+    @NotBlank(message = "Password is required.")
+    @Size(min = 5, max = 14, message = "Password must be between 5 and 14 characters.")
     private String password;
 }

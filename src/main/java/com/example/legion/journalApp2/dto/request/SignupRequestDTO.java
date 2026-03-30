@@ -8,13 +8,14 @@ import lombok.Data;
 @Data
 public class SignupRequestDTO {
 
-    @NotBlank
-    private String userName;
+        @NotBlank(message = "Username is required.")
+        private String userName;
 
-    @Email
-    private String email;
+        @NotBlank(message = "Email is required.")
+        @Email(message = "Enter a valid email address.")
+        private String email;
 
-    @NotBlank
-    @Size(min = 5, max = 14)
-    private String password;
+        @NotBlank(message = "Password is required.")
+        @Size(min = 5, max = 14, message = "Password must be between 5 and 14 characters.")
+        private String password;
 }

@@ -39,7 +39,7 @@ public class JournalService{
     //get all entries
     public List<JournalResponseDTO> getAllEntries(){
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
-        logger.info("Fetching entries for user: {}", userName);
+        logger.debug("Fetching entries for user: {}", userName);
         List<JournalEntry> entries = journalRepository.findByUserName(userName);
         return entries.stream().map(journalMapper::toDTO).toList();
     }
@@ -52,7 +52,7 @@ public class JournalService{
             return new ResourceNotFoundException("Journal not found.");
         });
         if(!entry.getUserName().equals(userName)){
-            logger.warn("Unauthorised user: {} trying to access entry with Id: {}", userName, id);
+            logger.warn("Unauthorized access attempt by user: {} for entry Id: {}", userName, id);
             throw new AccessDeniedException("Access Denied");
         }
         logger.info("Entry retrieved by user: {}. Id: {}", userName, id);
@@ -69,7 +69,7 @@ public class JournalService{
                 }
         );
         if(!entry.getUserName().equals(userName)){
-            logger.warn("Unauthorised user: {} trying to update entry with Id: {}", userName, id);
+            logger.warn("Unauthorized access attempt by user: {} for entry Id: {}", userName, id);
             throw new AccessDeniedException("Access Denied");
         }
         if(dto.getTitle() != null) entry.setTitle(dto.getTitle());
@@ -90,7 +90,7 @@ public class JournalService{
                 }
         );
         if(!entry.getUserName().equals(userName)){
-            logger.warn("Unauthorised user: {} trying to delete entry with Id: {}", userName, id);
+            logger.warn("Unauthorized access attempt by user: {} for entry Id: {}", userName, id);
             throw new AccessDeniedException("Access Denied");
         }
         logger.info("Entry deleted by user: {}. Id: {}", userName, id);
