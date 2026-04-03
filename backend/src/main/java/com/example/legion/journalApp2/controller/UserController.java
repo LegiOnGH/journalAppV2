@@ -34,4 +34,11 @@ public class UserController {
         userService.changePassword(dto);
         return ResponseEntity.ok("Password updated successfully.");
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteUser(){
+        logger.info("Delete user request initiated.");
+        userService.deleteCurrentUser();
+        return ResponseEntity.ok("User deleted successfully.");
+    }
 }

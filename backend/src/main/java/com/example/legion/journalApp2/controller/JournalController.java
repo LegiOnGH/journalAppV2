@@ -3,12 +3,16 @@ package com.example.legion.journalApp2.controller;
 import com.example.legion.journalApp2.dto.request.JournalRequestDTO;
 import com.example.legion.journalApp2.dto.request.JournalUpdateDTO;
 import com.example.legion.journalApp2.dto.response.JournalResponseDTO;
+import com.example.legion.journalApp2.dto.response.PageResponse;
 import com.example.legion.journalApp2.service.JournalService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,9 +41,9 @@ public class JournalController {
 
     //Get entries
     @GetMapping("/getAll")
-    public ResponseEntity<List<JournalResponseDTO>> getAll(){
+    public ResponseEntity<PageResponse<JournalResponseDTO>> getAll(Pageable pageable){
         logger.debug("Fetching all journal entries for current user.");
-        return ResponseEntity.ok(journalService.getAllEntries());
+        return ResponseEntity.ok(journalService.getAllEntries(pageable));
     }
 
     //Get entry by id

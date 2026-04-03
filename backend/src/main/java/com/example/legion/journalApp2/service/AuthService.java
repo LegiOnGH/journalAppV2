@@ -5,6 +5,7 @@ import com.example.legion.journalApp2.dto.request.SignupRequestDTO;
 import com.example.legion.journalApp2.dto.response.AuthResponseDTO;
 import com.example.legion.journalApp2.dto.response.UserResponseDTO;
 import com.example.legion.journalApp2.entity.User;
+import com.example.legion.journalApp2.enums.Role;
 import com.example.legion.journalApp2.mapper.UserMapper;
 import com.example.legion.journalApp2.repository.UserRepository;
 import com.example.legion.journalApp2.security.JwtUtil;
@@ -12,10 +13,10 @@ import com.example.legion.journalApp2.exception.BadRequestException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.example.legion.journalApp2.enums.Role;
 
 import java.util.Optional;
 
@@ -48,6 +49,7 @@ public class AuthService {
             throw new BadRequestException("Username already exists.");
         }
         User user = userMapper.toEntity(requestDTO);
+        user.setRole(Role.ROLE_USER);
         user.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
         User savedUser = userRepository.save(user);
         logger.info("New user created with username: {}", savedUser.getUserName());

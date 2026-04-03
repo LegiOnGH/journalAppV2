@@ -1,5 +1,6 @@
 package com.example.legion.journalApp2.entity;
 
+import com.example.legion.journalApp2.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,8 @@ public class User {
 
     @Indexed(unique = true)
     private String userName;
+
+    private Role role;
 
     private String email;
 
