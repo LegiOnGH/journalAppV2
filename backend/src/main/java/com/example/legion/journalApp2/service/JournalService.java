@@ -6,6 +6,7 @@ import com.example.legion.journalApp2.dto.response.JournalAdminResponseDTO;
 import com.example.legion.journalApp2.dto.response.JournalResponseDTO;
 import com.example.legion.journalApp2.dto.response.PageResponse;
 import com.example.legion.journalApp2.entity.JournalEntry;
+import com.example.legion.journalApp2.enums.Sentiment;
 import com.example.legion.journalApp2.exception.ResourceNotFoundException;
 import com.example.legion.journalApp2.mapper.JournalMapper;
 import com.example.legion.journalApp2.repository.JournalRepository;
@@ -41,10 +42,21 @@ public class JournalService {
     }
 
     //get all entries
-    public PageResponse<JournalResponseDTO> getAllEntries(Pageable pageable) {
+    public PageResponse<JournalResponseDTO> getAllEntries(String title, Sentiment sentiment, Pageable pageable) {
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
-        logger.debug("Fetching entries for user: {}", userName);
-        Page<JournalEntry> page = journalRepository.findByUserName(userName, pageable);
+        logger.debug("{} fetching entries | page: {}, size: {} | filters -> title: {}, sentiment: {}", userName, title, pageable.getPageNumber(), pageable.getPageSize(), sentiment);
+        Page<JournalEntry> page;
+        if(title != null && sentiment != null){
+            page = journalRepository.findByUserNameAndTitleContainingIgnoreCaseAndSentiment(
+                    userName, title, sentiment, pageable
+            );
+        } else if(title != null) {
+            page = journalRepository.findByUserNameAndTitleContainingIgnoreCase(userName, title, pageable);
+        } else if(sentiment != null){
+            page = journalRepository.findByUserNameAndSentiment(userName, sentiment, pageable);
+        } else{
+            page = journalRepository.findByUserName(userName, pageable);
+        }
         List<JournalResponseDTO> content = page
                 .getContent()
                 .stream()
@@ -112,11 +124,21 @@ public class JournalService {
     }
 
     //get entries for admin
-    public PageResponse<JournalAdminResponseDTO> getAllEntriesForAdmin(Pageable pageable) {
+    public PageResponse<JournalAdminResponseDTO> getAllEntriesForAdmin(String title, Sentiment sentiment,
+                                                                       String userName, Pageable pageable) {
         Page<JournalEntry> page = journalRepository.findAll(pageable);
-        List<JournalAdminResponseDTO> content = page.getContent().stream().map(journalMapper::toAdminDTO).toList();
+        logger.info("Admin fetching entries | page: {}, size: {} | filters -> username: {}, title: {}, sentiment: {}",pageable.getPageNumber(), pageable.getPageSize(), userName, title, sentiment);
+        List<JournalAdminResponseDTO> filtered = page.getContent().stream()
+                .filter(entry -> title == null ||
+                        entry.getTitle().toLowerCase().contains(title.toLowerCase()))
+                .filter(entry -> sentiment == null ||
+                        entry.getSentiment() == sentiment)
+                .filter(entry -> userName == null ||
+                        userName.equals(entry.getUserName()))
+                .map(journalMapper::toAdminDTO)
+                .toList();
         return PageResponse.<JournalAdminResponseDTO>builder()
-                .content(content)
+                .content(filtered)
                 .page(page.getNumber())
                 .size(page.getSize())
                 .totalElements(page.getTotalElements())

@@ -4,6 +4,7 @@ import com.example.legion.journalApp2.dto.request.JournalRequestDTO;
 import com.example.legion.journalApp2.dto.request.JournalUpdateDTO;
 import com.example.legion.journalApp2.dto.response.JournalResponseDTO;
 import com.example.legion.journalApp2.dto.response.PageResponse;
+import com.example.legion.journalApp2.enums.Sentiment;
 import com.example.legion.journalApp2.service.JournalService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -41,9 +42,10 @@ public class JournalController {
 
     //Get entries
     @GetMapping("/getAll")
-    public ResponseEntity<PageResponse<JournalResponseDTO>> getAll(Pageable pageable){
-        logger.debug("Fetching all journal entries for current user.");
-        return ResponseEntity.ok(journalService.getAllEntries(pageable));
+    public ResponseEntity<PageResponse<JournalResponseDTO>> getAll(@RequestParam(required = false) String title, @RequestParam(required = false) Sentiment sentiment, Pageable pageable){
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        logger.debug("Fetching journal entries for user: {}",userName);
+        return ResponseEntity.ok(journalService.getAllEntries(title, sentiment, pageable));
     }
 
     //Get entry by id

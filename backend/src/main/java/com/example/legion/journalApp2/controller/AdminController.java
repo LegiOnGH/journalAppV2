@@ -2,8 +2,11 @@ package com.example.legion.journalApp2.controller;
 
 import com.example.legion.journalApp2.dto.response.JournalAdminResponseDTO;
 import com.example.legion.journalApp2.dto.response.PageResponse;
+import com.example.legion.journalApp2.enums.Sentiment;
 import com.example.legion.journalApp2.service.JournalService;
 import com.example.legion.journalApp2.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,8 @@ import java.util.List;
 @RequestMapping("/admin")
 public class AdminController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
+
     private final UserService userService;
     private final JournalService journalService;
 
@@ -27,14 +32,20 @@ public class AdminController {
     //Get entries
     @GetMapping("/entries")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PageResponse<JournalAdminResponseDTO>> getAllEntries(Pageable pageable){
-        return ResponseEntity.ok(journalService.getAllEntriesForAdmin(pageable));
+    public ResponseEntity<PageResponse<JournalAdminResponseDTO>> getAllEntries(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Sentiment sentiment,
+            @RequestParam(required = false) String userName,
+            Pageable pageable){
+        logger.info("Fetching entries for admin.");
+        return ResponseEntity.ok(journalService.getAllEntriesForAdmin(title, sentiment, userName, pageable));
     }
 
     //DeleteUsers
     @DeleteMapping("/delete/{userName}")
     public ResponseEntity<String> deleteUser(@PathVariable String userName){
         userService.deleteUserByAdmin(userName);
+        logger.info("Deleted user: {}",userName);
         return ResponseEntity.ok("User deleted successfully.");
     }
 }
