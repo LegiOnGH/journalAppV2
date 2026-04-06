@@ -66,7 +66,8 @@ public class AuthService {
             throw new BadCredentialsException("Invalid username or password.");
         }
         logger.info("User authenticated successfully: {}", user.getUserName());
-        String token = jwtUtil.generateToken(user.getUserName());
-        return new AuthResponseDTO(token);
+        String role =  user.getRole().name();
+        String token = jwtUtil.generateToken(user.getUserName(), role);
+        return new AuthResponseDTO(token, user.getRole());
     }
 }

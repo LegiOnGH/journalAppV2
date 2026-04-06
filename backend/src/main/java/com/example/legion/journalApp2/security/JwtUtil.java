@@ -1,5 +1,6 @@
 package com.example.legion.journalApp2.security;
 
+import com.example.legion.journalApp2.enums.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -26,11 +27,12 @@ public class JwtUtil {
     private long expiration;
 
     //Generate token
-    public String generateToken(String userName){
+    public String generateToken(String userName, String role){
         logger.debug("Generating JWT token for user: {}", userName);
 
         String token = Jwts.builder()
                 .subject(userName)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis()+ expiration))
                 .signWith(getSignKey())

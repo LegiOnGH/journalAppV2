@@ -93,7 +93,7 @@ public class UserService {
         }
         journalRepository.deleteByUserName(targetUserName);
         userRepository.delete(user);
-        logger.info("Admin {} deleted user: {}",currentUser, targetUserName);
+        logger.info("Admin: {} deleted user: {}",currentUser, targetUserName);
     }
 
     //get username
