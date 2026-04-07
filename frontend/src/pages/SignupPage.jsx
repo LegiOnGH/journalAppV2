@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API from "../services/api";
+import "../index.css";
 import { Link, useNavigate } from "react-router-dom";
 
 function SignupPage(){
@@ -40,12 +41,12 @@ function SignupPage(){
     }; 
 
     return(
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="page-container">
             <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
                 <h2 className="text-2xl font-bold mb-6 text-center"> Signup</h2>
                 <form onSubmit={handleSignup} className="space-y-4">
                     <input
-                        className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input"
                         placeholder="Username"
                         value={userName}
                         onChange={(e) => setUserName(e.target.value)}
@@ -55,7 +56,7 @@ function SignupPage(){
                         <p className="text-red-500 text-sm">{errors.userName}</p> 
                     )}
                     <input
-                        className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input"
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -64,7 +65,7 @@ function SignupPage(){
                         <p className="text-red-500 text-sm">{errors.email}</p> 
                     )}
                     <input
-                        className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input"
                         type="password"
                         placeholder="Password"
                         value={password}
