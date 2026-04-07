@@ -14,10 +14,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,10 +32,12 @@ public class JournalService {
 
     private final JournalRepository journalRepository;
     private final JournalMapper journalMapper;
+    private final MongoTemplate mongoTemplate;
 
-    public JournalService(JournalRepository journalRepository, JournalMapper journalMapper) {
+    public JournalService(JournalRepository journalRepository, JournalMapper journalMapper, MongoTemplate mongoTemplate) {
         this.journalRepository = journalRepository;
         this.journalMapper = journalMapper;
+        this.mongoTemplate = mongoTemplate;
     }
 
     //create entry
@@ -130,26 +137,51 @@ public class JournalService {
     }
 
     //get entries for admin
-    public PageResponse<JournalAdminResponseDTO> getAllEntriesForAdmin(String title, Sentiment sentiment,
-                                                                       String userName, Pageable pageable) {
-        Page<JournalEntry> page = journalRepository.findAll(pageable);
-        logger.info("Admin fetching entries | page: {}, size: {} | filters -> username: {}, title: {}, sentiment: {}",pageable.getPageNumber(), pageable.getPageSize(), userName, title, sentiment);
-        List<JournalAdminResponseDTO> filtered = page.getContent().stream()
-                .filter(entry -> title == null ||
-                        entry.getTitle().toLowerCase().contains(title.toLowerCase()))
-                .filter(entry -> sentiment == null ||
-                        entry.getSentiment() == sentiment)
-                .filter(entry -> userName == null ||
-                        userName.equals(entry.getUserName()))
+    public PageResponse<JournalAdminResponseDTO> getAllEntriesForAdmin(
+            String title,
+            Sentiment sentiment,
+            String userName,
+            Pageable pageable) {
+
+        Query query = new Query();
+
+        List<Criteria> criteriaList = new ArrayList<>();
+
+        if (title != null && !title.isEmpty()) {
+            criteriaList.add(Criteria.where("title").regex(title, "i"));
+        }
+
+        if (sentiment != null) {
+            criteriaList.add(Criteria.where("sentiment").is(sentiment));
+        }
+
+        if (userName != null && !userName.isEmpty()) {
+            criteriaList.add(Criteria.where("userName").is(userName));
+        }
+
+        if (!criteriaList.isEmpty()) {
+            query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
+        }
+
+        // 🔥 Count BEFORE pagination
+        long total = mongoTemplate.count(query, JournalEntry.class);
+
+        // 🔥 Apply pagination AFTER filtering
+        query.with(pageable);
+
+        List<JournalEntry> entries = mongoTemplate.find(query, JournalEntry.class);
+
+        List<JournalAdminResponseDTO> content = entries.stream()
                 .map(journalMapper::toAdminDTO)
                 .toList();
+
         return PageResponse.<JournalAdminResponseDTO>builder()
-                .content(filtered)
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .last(page.isLast())
+                .content(content)
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .totalElements(total)
+                .totalPages((int) Math.ceil((double) total / pageable.getPageSize()))
+                .last((pageable.getPageNumber() + 1) * pageable.getPageSize() >= total)
                 .build();
     }
 }
