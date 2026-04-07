@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
@@ -72,11 +73,16 @@ public class JournalService {
 
     //get entry by id
     public JournalResponseDTO getById(String id) {
-        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         String userName = auth.getName();
+         boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
         JournalEntry entry = journalRepository.findById(id).orElseThrow(() -> {
             logger.warn("Journal with Id: {} not found.", id);
             return new ResourceNotFoundException("Journal not found.");
         });
+        if(isAdmin) return journalMapper.toDTO(entry);
         if (!entry.getUserName().equals(userName)) {
             logger.warn("Unauthorized access attempt by user: {} for entry Id: {}", userName, id);
             throw new AccessDeniedException("Access Denied");
