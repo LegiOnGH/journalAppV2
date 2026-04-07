@@ -36,15 +36,17 @@ export default function DeleteUserByUsername() {
 
     return (
         <div>
-            <h3>Delete User</h3>
+            <h3 className="font-semibold mb-3 text-red-500">Delete User</h3>
 
             <input
+                className="p-2 border rounded mb-4 w-full focus:ring-2 focus:ring-red-400"
                 placeholder="Enter username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
             />
 
-            <button onClick={handleDelete} disabled={loading}>
+            <button onClick={handleDelete} disabled={loading}
+                className={`w-full p-2 text-white rounded disabled:opacity-50 ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600"}`}>
                 {loading ? "Deleting..." : "Delete"}
             </button>
         </div>
