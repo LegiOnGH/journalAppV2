@@ -50,8 +50,7 @@ public class JwtUtil {
             logger.debug("Extracted username from token: {}", userName);
             return userName;
         } catch (Exception e){
-            logger.warn("Failed to extract username from token");
-            throw e;
+            throw new RuntimeException("Invalid or expired JWT", e);
         }
     }
 
