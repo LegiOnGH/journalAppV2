@@ -5,6 +5,7 @@ import FilterBar from "../components/FilterBar";
 import JournalList from "../components/JournalList";
 import Pagination from "../components/Pagination";
 import { useNavigate } from "react-router-dom";
+import { parseError } from "../utils/errorHandler";
 
 export default function AdminDashboard() {
 
@@ -13,6 +14,7 @@ export default function AdminDashboard() {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const [filters, setFilters] = useState({
         title: "",
@@ -29,6 +31,7 @@ export default function AdminDashboard() {
             const fetchJournals = async () => {
                 try {
                     setLoading(true);
+                    setError("");
                     const res = await API.get("/admin/entries", {
                         params: {
                             page,
@@ -41,7 +44,8 @@ export default function AdminDashboard() {
                     setJournals(res.data.content);
                     setTotalPages(res.data.totalPages);
                 } catch (err) {
-                    console.error(err);
+                    const parsed = parseError(err);
+                    setError(parsed.message);
                 }finally{
                     setLoading(false);
                 }
@@ -49,12 +53,12 @@ export default function AdminDashboard() {
             fetchJournals();
         }, 400);
         return () => clearTimeout(delay);
-    }, [page, filters]);
+    }, [page, filters, navigate]);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
-        window.location.href = "/";
+        navigate("/");
     };
 
     return (
@@ -64,18 +68,18 @@ export default function AdminDashboard() {
                     <h2 className="text-2xl font-bold">Admin Dashboard</h2>
                     <div className="flex gap-3">
                         <button onClick={()=> navigate("/profile")}
-                            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition active:scale-95">
+                            className="btn-secondary">
                                 Profile
                             </button>
                             <button onClick={handleLogout}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition active:scale-95">
+                            className="btn-danger">
                                 Logout
                             </button>
                     </div>
                 </div>
                 <div className="mb-6">
                     <button onClick={() => navigate("/admin/users")}
-                    className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition active:scale-95">
+                    className="btn-primary">
                         Manage Users
                     </button>
                 </div>
@@ -87,6 +91,8 @@ export default function AdminDashboard() {
                 />
                 {loading ? (
                     <p className="text-center mt-6">Loading...</p>
+                ) : error ? (
+                    <p className="error text-center">{error}</p>
                 ) : journals.length === 0 ? ( 
                     <p className="text-center mt-6 text-gray-500">No entries found</p>
                 ) : (

@@ -2,22 +2,28 @@ import { useState } from "react";
 import API from "../services/api";
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { parseError } from "../utils/errorHandler";
+import "../index.css";
 
 function LoginPage(){
     const[userName, setUserName] = useState("");
     const[password, setPassword] = useState("");
     const[loading, setLoading] = useState(false);
-    const[errors, setErrors] = useState({});
+    const[error, setError] = useState("");
+    const[fieldErrors, setFieldErrors] = useState({});
 
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        if (!userName.trim() || !password) {
-            return alert("Username and password are required");
+        if (!userName || !password) {
+            setError("Username and password are required");
+            return;
         }
         try{
             setLoading(true);
+            setError("");
+            setFieldErrors({});
             const res = await API.post("/auth/login", {
                 userName,
                 password,
@@ -27,59 +33,65 @@ function LoginPage(){
             const decoded = jwtDecode(res.data.token);
             const role = decoded.role;
             localStorage.setItem("role", role);
-            if(role === "ROLE_ADMIN"){
-                navigate("/admin");
-            }else{
-                navigate("/dashboard");
-            }
+            navigate(role === "ROLE_ADMIN" ? "/admin" : "/dashboard");
         } catch (err) {
-            const data = err.response?.data;
-            if(data?.errors){
-                setErrors(data.errors);
-            }else{
-                alert(data?.message || "Login failed");
+            const parsed = parseError(err);
+            if(parsed.isValidationError){
+                setFieldErrors(parsed.fieldErrors);
+            setError(parsed.message);
+            return;
             }
-            console.log(err)
+            setError(parsed.message);
         }finally {
             setLoading(false);
         }
     };
 
     return(
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="p-8 bg-white rounded-xl shadow-md w-full max-w-sm">
-            <h2 className="text-2xl font-bold mb-6 text-center"> Login</h2>
+        <div className="page-container">
+            <div className="card max-w-sm">
+            <h2 className="h2"> Login</h2>
             <form onSubmit={handleLogin} className="space-y-4">
+                {error && (<p className="error text-center">{error}</p>)}
                 <input
-                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="input"
                     placeholder="Username"
+                    autoComplete="username"
                     value={userName}
-                    onChange={(e) => setUserName(e.target.value)} 
+                    onChange={(e) => {
+                        const value = e.target.value;
+                            if(!/\s/.test(value)){
+                                setUserName(value);
+                            }
+                    }} 
                     autoFocus
                 />
-                {errors.userName && (
-                    <p className="text-red-500 text-sm">{errors.userName}</p>
+                {fieldErrors.userName && (
+                    <p className="error">{fieldErrors.userName}</p>
                 )}
                 <input
-                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="input"
                     type="password"
                     placeholder="Password"
+                    autoComplete="current-password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {setPassword(e.target.value)
+                    setFieldErrors(prev => ({ ...prev, password: "" }))
+                }}
                 />
-                {errors.password && (
-                    <p className="text-red-500 text-sm">{errors.password}</p>
+                {fieldErrors.password && (
+                    <p className="error">{fieldErrors.password}</p>
                 )}
                 <button 
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition disabled:opacity-50"
+                    className="btn-primary w-full"
                     >{loading ? "Logging in..." : "Login"}
                 </button>
             </form>
             <p className="text-sm text-center mt-4">
                     Don't have an account?
-                <Link to="/signup" className="text-blue-500 hover:underline ml-1"> Signup here</Link>
+                <Link to="/signup" className="link ml-1"> Signup here</Link>
             </p>
             </div>
         </div>

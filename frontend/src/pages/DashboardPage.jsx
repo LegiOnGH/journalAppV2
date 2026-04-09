@@ -4,6 +4,8 @@ import API from "../services/api";
 import FilterBar from "../components/FilterBar";
 import JournalList from "../components/JournalList";
 import Pagination from "../components/Pagination";
+import { parseError } from "../utils/errorHandler";
+import "../index.css";
 
 function DashboardPage() {
 
@@ -13,6 +15,7 @@ function DashboardPage() {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const [filters, setFilters] = useState({
         title: "",
@@ -28,17 +31,20 @@ function DashboardPage() {
             const fetchJournals = async () => {
                 try {
                     setLoading(true);
+                    setError("");
                     const res = await API.get("/journal/getAll", {
                         params: {
                             page,
-                            size : 5,
-                            ...filters,
+                            size: 5,
+                            ...(filters.title && { title: filters.title }),
+                            ...(filters.sentiment && { sentiment: filters.sentiment }),  
                         },
                     });
                     setJournals(res.data.content);
                     setTotalPages(res.data.totalPages);
                 } catch (err) {
-                    console.error(err);
+                    const parsed = parseError(err);
+                    setError(parsed.message);
                 }finally {
                     setLoading(false);
                 }
@@ -46,7 +52,7 @@ function DashboardPage() {
             fetchJournals();
         }, 400);
         return () => clearTimeout(delay);
-    }, [page, filters]);
+    }, [page, filters, navigate]);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -60,17 +66,20 @@ function DashboardPage() {
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold">My Journal</h2>
                     <div className="flex gap-3">
-                        <button onClick={() => navigate("/profile")} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition active:scale-95">Profile</button>
-                        <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition active:scale-95">Logout</button>
+                        <button onClick={() => navigate("/profile")} className="btn-secondary">Profile</button>
+                        <button onClick={handleLogout} className="btn-danger">Logout</button>
                     </div>
                 </div>
                 <div className="mb-6">
-                    <button onClick={() => navigate("/create")} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition active:scale-95">New Entry</button>
+                    <button onClick={() => navigate("/create")} className="btn-primary">New Entry</button>
                 </div>
                 
                 <FilterBar filters={filters} setFilters={setFilters} isAdmin={false} />
                 {loading ? (
-                    <p className="text-center mt-6">Loading...</p>) : journals.length === 0 ? (
+                    <p className="text-center">Loading...</p>
+                ) : error ? (
+                    <p className="error">{error}</p>
+                ) : journals.length === 0 ? (
                         <p className="text-center mt-6 text-gray-500">No journal entries found.</p>
                     ) : (<JournalList journals={journals} />)}
                 <Pagination page={page} totalPages={totalPages} setPage={setPage} />

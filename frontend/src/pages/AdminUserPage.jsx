@@ -1,21 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import DeleteUserByUsername from "../components/DeleteUserByUsername";
+import "../index.css"
 
 function AdminUsersPage() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-gray-100 flex justify-center items-start pt-6">
-            <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md space-y-4">
+        <div className="page-container">
+            <div className="card max-w-md space-y-4">
 
                 <button
                     onClick={() => navigate(-1)}
-                    className="text-sm text-blue-500 hover:underline"
+                    className="link self-start"
                 >
                     Back
                 </button>
 
-                <h2 className="text-2xl font-bold text-center">
+                <h2 className="h2">
                     User Management
                 </h2>
 

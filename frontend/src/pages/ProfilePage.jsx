@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { parseError } from "../utils/errorHandler";
+import "../index.css";
 
 function ProfilePage() {
     const [user, setUser] = useState(null);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -17,36 +21,51 @@ function ProfilePage() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
+                setError("");
                 const res = await API.get("/user/me");
                 setUser(res.data);
             } catch (err) {
-                console.error(err);
-                setError("Failed to load profile");
+                const parsed = parseError(err);
+                setError(parsed.message);
             }
         };
         fetchUser();
-    }, []);
+    }, [navigate]);
 
     const handleChangePassword = async () => {
         if (!oldPassword || !newPassword) {
-            return alert("Both fields are required");
+            setError("Both fields are required");
+            return;
         }
 
         if (newPassword.length < 5 || newPassword.length > 14) {
-            return alert("Password must be between 5-14 characters.");
+            setError("Password must be between 5-14 characters.");
+            return;
         }
 
         try {
             setLoading(true);
+            setError("");
+            setSuccess("");
 
             await API.post("/user/changePass", { oldPassword, newPassword });
-            alert("Password updated");
+            setSuccess("Password updated successfully");
 
             setOldPassword("");
             setNewPassword("");
         } catch (err) {
-            alert("Failed to update password");
-            console.error(err);
+            const parsed = parseError(err);
+            if(parsed.isUnauthorized){
+                localStorage.clear();
+                navigate("/");
+                return;
+            }
+            if(parsed.isValidationError){
+                setFieldErrors(parsed.fieldErrors);
+                setError(parsed.message);
+                return;
+            }
+            setError(parsed.message);
         } finally {
             setLoading(false);
         }
@@ -60,52 +79,73 @@ function ProfilePage() {
             localStorage.clear();
             navigate("/");
         } catch (err) {
-            console.error(err);
+            const parsed = parseError(err);
+            if(parsed.isUnauthorized){
+                localStorage.clear();
+                navigate("/");
+                return;
+            }
+            setError(parsed.message);
         }
     };
 
-    if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
+    if (error && !user) return <p className="error text-center">{error}</p>;
     if (!user) return <p className="text-center mt-10">Loading...</p>;
 
     return (
-        <div className="min-h-screen bg-gray-100 flex justify-center items-start pt-6">
-            <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md space-y-4">
+        <div className="page-container">
+            <div className="card max-w-md space-y-4">
                 <button
                     onClick={() => navigate(-1)}
-                    className="self-start text-sm text-blue-500 hover:underline"
+                    className="link self-start"
                 >
                     Back
                 </button>
 
-                <h2 className="text-2xl font-bold text-center">Profile</h2>
+                <h2 className="h2">Profile</h2>
+
+               
+
                 <div className="space-y-1">
-                    <p className="text-gray-700"><strong>Username:</strong> {user.userName}</p>
-                    <p className="text-gray-700"><strong>Email:</strong> {user.email}</p>
+                    <p><strong>Username:</strong> {user.userName}</p>
+                    <p><strong>Email:</strong> {user.email}</p>
                 </div>
+
+                {error && <p className="error text-center">{error}</p>}
+                {success && <p className="success">{success}</p>}
 
                 <div className="space-y-3">
                     <h3 className="font-semibold">Change Password</h3>
 
                     <input
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
+                        className="input"
                         type="password"
                         placeholder="Old Password"
                         value={oldPassword}
-                        onChange={(e) => setOldPassword(e.target.value)}
+                        onChange={(e) => {
+                            setOldPassword(e.target.value);
+                            setFieldErrors(prev => ({ ...prev, oldPassword: "" }));
+                        }}
                     />
+                        {fieldErrors.oldPassword && (
+                            <p className="error">{fieldErrors.oldPassword}</p>
+                        )}
 
                     <input
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
+                        className="input"
                         type="password"
                         placeholder="New Password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                     />
+                        {fieldErrors.newPassword && (
+                            <p className="error">{fieldErrors.newPassword}</p>
+                        )}
 
                     <button
                         onClick={handleChangePassword}
                         disabled={loading}
-                        className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition active:scale-95 disabled:opacity-50"
+                        className="btn-primary w-full"
                     >
                         {loading ? "Updating..." : "Update Password"}
                     </button>
@@ -117,7 +157,7 @@ function ProfilePage() {
 
                         <button
                             onClick={handleDeleteAccount}
-                            className="w-full p-2 bg-red-500 text-white rounded hover:bg-red-600 transition active:scale-95"
+                            className="btn-danger w-full"
                         >
                             Delete Account
                         </button>

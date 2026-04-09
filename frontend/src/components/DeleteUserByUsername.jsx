@@ -1,40 +1,46 @@
 import { useState } from "react";
 import API from "../services/api";
+import { parseError } from "../utils/errorHandler";
 
 export default function DeleteUserByUsername() {
     const [username, setUsername] = useState("");
     const [confirmInput, setConfirmInput] = useState("");
     const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     const handleDelete = async () => {
         if (!username.trim()) {
-            return setMessage("Enter username");
+            setError("Enter username");
+            return;
         }
 
+        setError("");
+        setSuccess("");
         setConfirmInput("");
         setShowConfirm(true);
     };
 
     const confirmDelete = async () => {
         if (confirmInput !== username) {
-            return setMessage("Username mismatch. Deletion cancelled.");
+            setError("Username mismatch");
+            return;
         }
 
         try {
             setLoading(true);
-            setMessage("");
+            setError("");
 
             await API.delete(`/admin/delete/${username}`);
 
-            setMessage("User deleted successfully");
+            setSuccess("User deleted successfully");
             setUsername("");
             setShowConfirm(false);
 
         } catch (err) {
-            console.error(err);
-            setMessage("Failed to delete user");
+            const parsed = parseError(err);
+            setError(parsed.message);
         } finally {
             setLoading(false);
         }
@@ -45,26 +51,27 @@ export default function DeleteUserByUsername() {
             <h3 className="font-semibold text-red-500">Delete User</h3>
 
             <input
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-red-400"
+                className="input"
                 placeholder="Enter username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
             />
 
-            {message && (
-                <p className="text-sm text-center text-gray-600">
-                    {message}
+            {error && (
+                <p className="error text-center">
+                    {error}
+                </p>
+            )}
+            {success && (
+                <p className="success">
+                    {success}
                 </p>
             )}
 
             <button
                 onClick={handleDelete}
                 disabled={loading}
-                className={`w-full p-2 text-white rounded transition active:scale-95 disabled:opacity-50 ${
-                    loading
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-red-500 hover:bg-red-600"
-                }`}
+                className={"btn-danger w-full"}
             >
                 {loading ? "Deleting..." : "Delete"}
             </button>
@@ -72,7 +79,7 @@ export default function DeleteUserByUsername() {
             {/* 🔴 Confirm Modal */}
             {showConfirm && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50">
-                    <div className="bg-white p-6 rounded-lg w-80 text-center shadow-lg space-y-4 transform transition duration-200 scale-95 animate-in">
+                    <div className="card max-w-sm text-center space-y-4 ">
 
                         <h3 className="text-lg font-semibold">Confirm Deletion</h3>
 
@@ -81,7 +88,7 @@ export default function DeleteUserByUsername() {
                         </p>
 
                         <input
-                            className="w-full p-2 border rounded focus:ring-2 focus:ring-red-400"
+                            className="input"
                             placeholder="Enter username"
                             value={confirmInput}
                             onChange={(e) => setConfirmInput(e.target.value)}
@@ -90,7 +97,7 @@ export default function DeleteUserByUsername() {
                         <div className="flex justify-center gap-3">
                             <button
                                 onClick={() => setShowConfirm(false)}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition active:scale-95"
+                                className="btn-secondary"
                             >
                                 Cancel
                             </button>
@@ -98,7 +105,7 @@ export default function DeleteUserByUsername() {
                             <button
                                 onClick={confirmDelete}
                                 disabled={loading}
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition active:scale-95 disabled:opacity-50"
+                                className="btn-danger"
                             >
                                 Confirm
                             </button>

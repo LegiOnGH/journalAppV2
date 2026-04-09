@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import "../index.css";
+import { parseError } from "../utils/errorHandler";
 
 function CreateJournalPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const [form, setForm] = useState({
         title: "",
@@ -14,47 +18,63 @@ function CreateJournalPage() {
 
     const handleCreate = async (e) => {
         e.preventDefault();
-        if (!form.title || !form.content) {
-            alert("Title and content are required");
+        if (!form.title.trim() || !form.content.trim() ) {
+            setError("Title and content are required");
             return;
         }
         try {
             setLoading(true);
+            setError("");
+            setFieldErrors({});
             await API.post("/journal/create", form);
             navigate("/dashboard");
         } catch (err) {
-            console.error(err);
-            alert("Failed to create entry");
+            const parsed = parseError(err);
+            if (parsed.isValidationError) {
+                setFieldErrors(parsed.fieldErrors);
+                setError(parsed.message);
+                return;
+            }
+            setError(parsed.message);
         }finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-            <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-lg">
-                <h2 className="text-2xl font-bold mb-6 text-center">Create Entry</h2>
+        <div className="page-container">
+            <div className="card max-w-lg">
+                <h2 className="h2">Create Entry</h2>
                 <form onSubmit={handleCreate} className="space-y-4">
+                    {error && (<p className="error text-center">{error}</p>)}
                     <input
-                        className="w-full p-2 mb-4 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="input"
                         placeholder="Title"
                         value={form.title}
-                        onChange={(e) =>
-                            setForm({ ...form, title: e.target.value })
-                        }
+                        onChange={(e) => {
+                            setForm({ ...form, title: e.target.value });
+                            setFieldErrors(prev => ({ ...prev, title: "" }));
+                        }}
                     />
+                    {fieldErrors.title && (
+                        <p className="error">{fieldErrors.title}</p>
+                    )}
 
                     <textarea
-                        className="w-full p-2 border rounded h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="textarea"
                         placeholder="Write your thoughts here..."
                         value={form.content}
-                        onChange={(e) =>
+                        onChange={(e) => {
                             setForm({ ...form, content: e.target.value })
-                        }
+                            setFieldErrors(prev => ({ ...prev, content: "" }));
+                        }}
                     />
+                    {fieldErrors.content && (
+                        <p className="error">{fieldErrors.content}</p>
+                    )}
 
                     <select
-                        className="w-full p-2 border rounded"
+                        className="input"
                         value={form.sentiment}
                         onChange={(e) =>
                             setForm({ ...form, sentiment: e.target.value })
@@ -66,18 +86,17 @@ function CreateJournalPage() {
                         <option value="NEUTRAL">Neutral</option>
                     </select>
 
-                    <div className="flex justify-center gap-10 pt-2">
+                    <div className="flex justify-center gap-6 pt-2">
                         <button 
                             type="button"
                             onClick={() => navigate("/dashboard")} 
-                            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition active:scale-95">
+                            className="btn-secondary">
                                 Cancel
                         </button>
                         <button 
                             type="submit"
                             disabled={loading}
-                            onClick={handleCreate}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-50 active:scale-95">
+                            className="btn-primary">
                                 {loading ? "Creating..." : "Create"}
                         </button>
                     </div>

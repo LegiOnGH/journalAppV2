@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import { parseError } from "../utils/errorHandler";
+import "../index.css";
 
 function JournalDetailPage() {
     const { id } = useParams();
@@ -11,7 +13,8 @@ function JournalDetailPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [errors, setErrors] = useState({});
+    const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const role = localStorage.getItem("role");
     const isAdmin = role === "ROLE_ADMIN";
@@ -19,40 +22,38 @@ function JournalDetailPage() {
     useEffect(() => {
         const fetchJournal = async () => {
             try {
+                setError("");
                 const res = await API.get(`/journal/get/${id}`);
                 setJournal(res.data);
                 setOriginalJournal(res.data);
             } catch (err) {
-                console.error(err);
-                const data = err.response?.data;
-                if (data?.errors) {
-                    setErrors(data.errors);
-                } else {
-                    alert(data?.message || "Failed to load journal entry");
-                }
+                const parsed = parseError(err);
+                setError(parsed.message);
             }
         };
         fetchJournal();
-    }, [id]);
+    }, [id, navigate]);
 
     const handleDelete = async () => {
         try {
             await API.delete(`/journal/delete/${id}`);
             navigate(isAdmin ? "/admin" : "/dashboard");
         } catch (err) {
-            console.error(err);
-            const data = err.response?.data;
-            if (data?.errors) {
-                setErrors(data.errors);
-            } else {
-                alert(data?.message || "Failed to delete journal entry");
+            const parsed = parseError(err);
+            if (parsed.isUnauthorized) {
+                localStorage.clear();
+                navigate("/");
+                return;
             }
+            setError(parsed.message);
         }
     };
 
     const handleUpdate = async () => {
         try {
             setLoading(true);
+            setError("");
+            setFieldErrors({});
 
             await API.patch(`/journal/update/${id}`, {
                 title: journal.title,
@@ -63,13 +64,18 @@ function JournalDetailPage() {
             setOriginalJournal(journal);
             setIsEditing(false);
         } catch (err) {
-            console.error(err);
-            const data = err.response?.data;
-            if (data?.errors) {
-                setErrors(data.errors);
-            } else {
-                alert(data?.message || "Failed to update journal entry");
+            const parsed = parseError(err);
+            if (parsed.isUnauthorized) {
+                localStorage.clear();
+                navigate("/");
+                return;
             }
+            if (parsed.isValidationError) {
+                setFieldErrors(parsed.fieldErrors);
+                setError(parsed.message);
+                return;
+            }
+            setError(parsed.message);
         } finally {
             setLoading(false);
         }
@@ -78,26 +84,28 @@ function JournalDetailPage() {
     const handleCancel = () => {
         setJournal(originalJournal);
         setIsEditing(false);
+        setError("");
+        setFieldErrors({});
     };
 
-    if (errors.general) {
-        return <p className="text-center mt-10 text-red-500">{errors.general}</p>;
+    if(error && !journal){
+        return <p className="error text-center">{error}</p>;
     }
 
     if (!journal) return <p className="text-center mt-10">Loading...</p>;
 
     return (
-        <div className="min-h-screen bg-gray-100 flex justify-center items-start pt-10">
-            <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl space-y-4">
+        <div className="page-container">
+            <div className="card max-w-2xl space-y-4">
 
                 <button
-                    className="text-sm text-blue-500 hover:underline"
+                    className="link self-start"
                     onClick={() => navigate(-1)}
                 >
                     Back
                 </button>
 
-                <h2 className="text-2xl font-bold text-center">
+                <h2 className="h2">
                     Journal Entry
                 </h2>
 
@@ -107,26 +115,38 @@ function JournalDetailPage() {
                     </p>
                 )}
 
+                {error && (
+                    <p className="error text-center">{error}</p>
+                )}
+
                 {isEditing ? (
                     <div className="space-y-3">
                         <input
-                            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
+                            className="input"
                             value={journal.title}
-                            onChange={(e) =>
-                                setJournal({ ...journal, title: e.target.value })
-                            }
+                            onChange={(e) => {
+                                setJournal({ ...journal, title: e.target.value });
+                                setFieldErrors(prev => ({ ...prev, title: "" }));
+                            }}
                         />
+                        {fieldErrors.title && (
+                            <p className="error">{fieldErrors.title}</p>
+                        )}
 
                         <textarea
-                            className="w-full p-2 border rounded h-32 focus:ring-2 focus:ring-blue-400"
+                            className="textarea"
                             value={journal.content}
-                            onChange={(e) =>
-                                setJournal({ ...journal, content: e.target.value })
-                            }
+                            onChange={(e) => {
+                                setJournal({ ...journal, content: e.target.value });
+                                setFieldErrors(prev => ({ ...prev, content: "" }))
+                            }}
                         />
+                        {fieldErrors.content && (
+                            <p className="error">{fieldErrors.content}</p>
+                        )}
 
                         <select
-                            className="w-full p-2 border rounded"
+                            className="input"
                             value={journal.sentiment}
                             onChange={(e) =>
                                 setJournal({
@@ -144,7 +164,7 @@ function JournalDetailPage() {
                 ) : (
                     <div className="bg-gray-50 p-4 rounded-lg border space-y-3">
 
-                        <h3 className="text-2xl font-bold text-gray-800">
+                        <h3 className="text-xl font-semibold text-gray-800">
                             {journal.title}
                         </h3>
 
@@ -164,14 +184,14 @@ function JournalDetailPage() {
                         {!isEditing ? (
                             <>
                                 <button
-                                    className="px-4 py-2 bg-yellow-400 rounded hover:bg-yellow-500 transition active:scale-95"
+                                    className="btn-yellow"
                                     onClick={() => setIsEditing(true)}
                                 >
                                     Edit
                                 </button>
 
                                 <button
-                                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition active:scale-95"
+                                    className="btn-danger"
                                     onClick={() => setShowConfirm(true)}
                                 >
                                     Delete
@@ -180,14 +200,14 @@ function JournalDetailPage() {
                         ) : (
                             <>
                                 <button
-                                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition active:scale-95"
+                                    className="btn-secondary"
                                     onClick={handleCancel}
                                 >
                                     Cancel
                                 </button>
 
                                 <button
-                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition active:scale-95 disabled:opacity-50"
+                                    className="btn-primary"
                                     onClick={handleUpdate}
                                     disabled={loading}
                                 >
@@ -203,7 +223,7 @@ function JournalDetailPage() {
             {/* Confirm Delete Modal */}
             {showConfirm && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50">
-                    <div className="bg-white p-6 rounded-lg w-80 text-center shadow-lg space-y-4">
+                    <div className="card max-w-sm text-center space-y-4">
 
                         <h3 className="text-lg font-semibold">
                             Delete Entry?
@@ -216,7 +236,7 @@ function JournalDetailPage() {
                         <div className="flex justify-center gap-3">
                             <button
                                 onClick={() => setShowConfirm(false)}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition active:scale-95"
+                                className="btn-secondary"
                             >
                                 Cancel
                             </button>
@@ -226,7 +246,7 @@ function JournalDetailPage() {
                                     await handleDelete();
                                     setShowConfirm(false);
                                 }}
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition active:scale-95"
+                                className="btn-danger"
                             >
                                 Confirm
                             </button>
