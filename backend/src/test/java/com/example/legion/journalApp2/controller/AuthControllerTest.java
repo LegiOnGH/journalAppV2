@@ -1,6 +1,7 @@
 package com.example.legion.journalApp2.controller;
 
 import com.example.legion.journalApp2.dto.response.AuthResponseDTO;
+import com.example.legion.journalApp2.enums.Role;
 import com.example.legion.journalApp2.security.JwtUtil;
 import com.example.legion.journalApp2.service.AuthService;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class AuthControllerTest {
     void shouldReturn200OnLogin() throws Exception {
 
         when(authService.login(any()))
-                .thenReturn(new AuthResponseDTO("dummy-token"));
+                .thenReturn(new AuthResponseDTO("dummy-token", Role.ROLE_USER));
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
