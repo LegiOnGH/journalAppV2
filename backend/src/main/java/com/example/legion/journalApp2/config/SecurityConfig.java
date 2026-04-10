@@ -1,7 +1,6 @@
 package com.example.legion.journalApp2.config;
 
 import com.example.legion.journalApp2.security.JwtFilter;
-import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -43,11 +42,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-//                .exceptionHandling(ex ->
-//                        ex.authenticationEntryPoint(((request, response, authException) -> {
-//                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-//                        }))
-//                        )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/**",
@@ -70,7 +64,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "https://*.vercel.app"));
         configuration.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
