@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -163,10 +164,9 @@ public class JournalService {
             query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
         }
 
-        // 🔥 Count BEFORE pagination
         long total = mongoTemplate.count(query, JournalEntry.class);
 
-        // 🔥 Apply pagination AFTER filtering
+        query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
         query.with(pageable);
 
         List<JournalEntry> entries = mongoTemplate.find(query, JournalEntry.class);
