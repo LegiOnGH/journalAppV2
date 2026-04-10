@@ -169,7 +169,7 @@ Authorization: Bearer <token>
 1. Clone repo
 
 ```bash
-git clone <https://github.com/your-username/journal-app.git>
+git clone <https://github.com/LegiOnGH/journalAppV2.git>
 cd journal-app
 ```
 
