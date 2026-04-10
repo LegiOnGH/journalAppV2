@@ -154,6 +154,8 @@ Authorization: Bearer <token>
 | GET    | /admin/entries           | Get all entries        |
 | DELETE | /admin/delete/{userName} | Delete non-admin users |
 
+---
+
 ## Key Concepts Implemented
 
 - JWT Authentication (custom filter)
@@ -163,6 +165,8 @@ Authorization: Bearer <token>
 - Global exception handling
 - Secure password change flow
 - Frontend route protection
+
+---
 
 ## Setup Instructions
 
@@ -266,27 +270,27 @@ backend
 
 ### Login Page
 
-![Login](./screenshots/login.png)
+<img src="./screenshots/login.png" width="50%" alt="Login" />
 
 ### User Dashboard
 
-![Dashboard](./screenshots/dashboard.png)
+<img src="./screenshots/dashboard.png" width="70%" alt="Dashboard">
 
 ### Admin Dashbaord
 
-![Admin](./screenshots/admin.png)
+<img src="./screenshots/admin.png" width="70%" alt="Admin">
 
 ### Create Entry
 
-![Create](./screenshots/create.png)
+<img src="./screenshots/create.png" width="50%" alt="Create">
 
 ### View Entry
 
-![View](./screenshots/view.png)
+<img src="./screenshots/view.png" width="70%" alt="View">
 
 ### Filters
 
-![Filters](./screenshots/filters.png)
+<img src="./screenshots/filters.png" width="70%" alt="Filters">
 
 ---
 
