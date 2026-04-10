@@ -1,59 +1,116 @@
-# Journal App (Spring Boot Backend)
+# Journal App (Full-Stack)
 
-A secure and scalable RESTful backend application for managing personal journal entries.
-Built using **Spring Boot**, following clean architecture principles, with   
-**JWT-based authentication**, structured exception handling, and unit testing.
+A secure and scalable **full-stack journal management application**  
+with authentication, role-based access, and a clean admin dashboard.
+
+Built using **Spring Boot (backend)** and **React (frontend)**, deployed on cloud platforms.
+
+---
+
+## Live Demo
+
+- 🌐 Frontend: <https://journal-app-frontend-green.vercel.app>
+- ⚙ Backend: <https://journal-backend-3mx6.onrender.com>
 
 ---
 
 ## Features
 
-*  JWT Authentication & Authorization
-*  User Signup & Login
-*  Get current user profile
-*  Change password (with old password validation)
-*  Full CRUD for journal entries
-*  User-specific data access (no cross-user access)
-*  DTO + Mapper architecture (no entity exposure)
-* ️ Global Exception Handling with structured responses
-*  Request validation using annotations
-*  Logging using SLF4J
-*  Swagger/OpenAPI documentation
-*  Basic unit & controller testing
+### Authentication & Security
+
+- JWT-based authentication
+- User Signup & Login
+- Password encryption using BCrypt
+- Protected routes (frontend + backend)
+
+---
+
+### User Features
+
+- Create, update, delete journal entries
+- View personal journal entries only
+- Change password with validation
+
+---
+
+### Admin Features
+
+- View all users' journal entries
+- Filter entries by:
+  - Title
+  - Sentiment
+  - Username
+- Pagination support
+- Entries sorted by latest (createdAt DESC)
+- Username displayed in admin dashboard
+
+---
+
+### Frontend Features
+
+- Clean responsive UI (React + Tailwind)
+- Protected routes using auth guards
+- Admin dashboard with filters & pagination
+- API integration using Axios
+- Environment-based configuration
+
+---
+
+### Backend Features
+
+- RESTful API using Spring Boot
+- DTO + Mapper architecture
+- Global exception handling
+- Request validation
+- Logging with SLF4J
+- Swagger API documentation
 
 ---
 
 ## Tech Stack
 
-* **Java 17**
-* **Spring Boot**
-* **Spring Security**
-* **JWT (JSON Web Token)**
-* **MongoDB**
-* **Maven**
-* **Lombok**
-* **Springdoc OpenAPI (Swagger)**
+### Backend
+
+- Java 17
+- Spring Boot
+- Spring Security
+- JWT
+- MongoDB
+- Maven
+- Lombok
+
+### Frontend
+
+- React (Vite)
+- Axios
+- Tailwind CSS
+
+### DevOps / Deployment
+
+- Render (Backend)
+- Vercel (Frontend)
+- Environment Variables
+- Docker (basic setup)
 
 ---
 
 ## Authentication Flow
 
-1. User sends login credentials.
-2. Credentials are validated.
-3. On success, a **JWT token** is generated.
-4. Token is sent in requests via:
+1. User logs in with credentials  
+2. Backend validates user  
+3. JWT token is generated  
+4. Token stored in frontend (localStorage)  
+5. Sent in every request:
 
-```text
+```http
 Authorization: Bearer <token>
 ```
 
-5. A custom **JWT filter**:
-
+6. A custom **JWT filter**:
     * Extracts token
     * Validates it
     * Sets authentication in **SecurityContext**
-
-6. Protected endpoints are accessible only with a valid token.
+7. Protected endpoints are accessible only with a valid token.
 
 ---
 
@@ -74,6 +131,7 @@ Authorization: Bearer <token>
 | ------ | ---------------- | ------------------------ |
 | GET    | /user/me         | Get current user details |
 | POST   | /user/changePass | Change user password     |
+| DELETE | /user/delete     | Deletes current user     |
 
 ---
 
@@ -89,56 +147,73 @@ Authorization: Bearer <token>
 
 ---
 
-## Security
+### Admin APIS (Protected)
 
-* Passwords encrypted using **BCrypt**
-* Stateless authentication using **JWT**
-* Custom **JWT filter** for request validation
-* Password change requires **old password verification**
-* Proper HTTP responses:
+| Method | Endpoint                 | Description            |
+| ------ | ------------------------ | ---------------------- |
+| GET    | /admin/entries           | Get all entries        |
+| DELETE | /admin/delete/{userName} | Delete non-admin users |
 
-    * `401 Unauthorized` → invalid/missing token
-    * `403 Forbidden` → accessing another user’s data
+## Key Concepts Implemented
+
+- JWT Authentication (custom filter)
+- Role-based access (Admin/User)
+- DTO & Mapper pattern
+- Pagination & filtering (MongoTemplate)
+- Global exception handling
+- Secure password change flow
+- Frontend route protection
+
+## Setup Instructions
+
+1. Clone repo
+
+```bash
+git clone <https://github.com/your-username/journal-app.git>
+cd journal-app
+```
+
+2. Backend Setup
+
+```bash
+cd backend
+```
+
+Create .env or configure:
+
+```.env
+MONGO_URI=your_mongo_uri
+JWT_SECRET=your_secret
+JWT_EXPIRATION=your_expiration_time
+```
+
+Run:
+
+```
+mvn spring-boot:run
+```
+
+3. Frontend Setup
+
+```bash
+cd frontend
+```
+
+Create .env:
+
+```bash
+VITE_API_URL=http://localhost:8080
+```
+
+Run:
+
+```bash
+npm run dev
+```
 
 ---
 
-## Testing
-
-* ✅ Unit tests using **Mockito**
-* ✅ Service layer tested for:
-    * Duplicate user signup
-    * Invalid login scenarios
-    * Password validation logic
-* ✅ Controller tests using **MockMvc**
-* Focus on business logic and API behavior
-
----
-
-## API Documentation (Swagger)
-
-* Integrated **Springdoc OpenAPI**
-* Interactive API testing via Swagger UI
-* Supports JWT authentication using **Authorize button**
-* Secured endpoints can be tested directly from UI
-
----
-
-## Logging
-
-* Implemented using **SLF4J**
-* Logging added across:
-    * Controllers (request tracking)
-    * Services (business logic)
-    * Security layer (authentication flow)
-* Uses appropriate log levels:
-    * `INFO` → important events
-    * `DEBUG` → internal flow
-    * `WARN` → invalid/suspicious actions
-    * `ERROR` → failures
-
----
-
-##  Exception Handling
+## Exception Handling
 
 Centralized using `@ControllerAdvice`
 
@@ -153,83 +228,90 @@ Centralized using `@ControllerAdvice`
 
 ---
 
-##  Project Structure
+## Project Structure
 
-```
-src/main/java
-└── com.example.legion.journalApp2
-    ├── config
-    ├── controller
-    ├── dto
-    │   ├── request
-    │   └── response
-    ├── entity
-    ├── enums
-    ├── exception
-    ├── mapper
-    ├── repository
-    ├── security
-    ├── service
-    └── JournalApp2Application
+```text
+frontend
+├── src
+│   ├── components
+│   ├── pages
+│   ├── services
+│   ├── utils
+│   ├── App.jsx
+│   ├── index.css
+│   └── main.jsx
+└── index.html
     
-src/test/java 
-└── com.example.legion.journalApp2 
-    ├── controller 
-    └── service
+backend
+└── src/main/java
+    └── com.example.legion.journalApp2
+        ├── config
+        ├── controller
+        ├── dto
+        │   ├── request
+        │   └── response
+        ├── entity
+        ├── enums
+        ├── exception
+        ├── mapper
+        ├── repository
+        ├── security
+        ├── service
+        └── JournalApp2Application
 ```
 
 ---
 
-## Key Design Decisions
+## Screenshots
 
-* **DTO Pattern** → prevents exposing internal database structure
-* **Mapper Layer** → clean transformation logic
-* **PATCH over PUT** → supports partial updates
-* **Constructor Injection** → improves testability
-* **Stateless APIs** → scalable and secure
+### Login Page
 
----
+![Login](./screenshots/login.png)
 
-##  Sample Request
+### User Dashboard
 
-```json
-POST /journal/create
-Authorization: Bearer <token>
+![Dashboard](./screenshots/dashboard.png)
 
-{
-  "title": "My Day",
-  "content": "Today I built a backend like a beast.",
-  "sentiment": "HAPPY"
-}
-```
+### Admin Dashbaord
+
+![Admin](./screenshots/admin.png)
+
+### Create Entry
+
+![Create](./screenshots/create.png)
+
+### View Entry
+
+![View](./screenshots/view.png)
+
+### Filters
+
+![Filters](./screenshots/filters.png)
 
 ---
 
 ## Future Improvements
 
-* Role-based authorization (RBAC)
-* Pagination & sorting
-* Refresh tokens
-* Rate limiting
-* Full integration testing
+- Refresh tokens
+- Role-based UI enhancements
+- Redis caching
+- Kafka event streaming
+- Notifications system
 
 ---
 
 ## Learning Outcomes
 
-* Implemented JWT authentication from scratch
-* Understood Spring Security filter chain deeply
-* Built secure user-specific access control
-* Implemented password change with validation
-* Learned structured exception handling
-* Added API documentation using Swagger
-* Implemented logging for better observability
-* Wrote unit and controller tests
+- Built full-stack app with authentication
+- Implemented JWT security from scratch
+- Understood Spring Security deeply
+- Handled real-world issues (CORS, deployment)
+- Designed admin dashboard with filtering
+- Learned deployment with Render & Vercel
 
 ---
 
 ## Author
 
 **Priyanshu Katwal**  
-Backend Developer | Java | Spring Boot
-
+Full Stack Developer | Java | Spring Boot | React
