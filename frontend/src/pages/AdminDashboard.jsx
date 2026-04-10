@@ -96,7 +96,7 @@ export default function AdminDashboard() {
                 ) : journals.length === 0 ? ( 
                     <p className="text-center mt-6 text-gray-500">No entries found</p>
                 ) : (
-                    <JournalList journals={journals} />
+                    <JournalList journals={journals} isAdmin={true} />
                 )}
                 <Pagination
                     page={page}

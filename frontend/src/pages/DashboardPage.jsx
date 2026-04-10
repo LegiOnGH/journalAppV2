@@ -81,7 +81,7 @@ function DashboardPage() {
                     <p className="error">{error}</p>
                 ) : journals.length === 0 ? (
                         <p className="text-center mt-6 text-gray-500">No journal entries found.</p>
-                    ) : (<JournalList journals={journals} />)}
+                    ) : (<JournalList journals={journals} isAdmin={false} />)}
                 <Pagination page={page} totalPages={totalPages} setPage={setPage} />
             </div>
         </div>
