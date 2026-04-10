@@ -270,27 +270,27 @@ backend
 
 ### Login Page
 
-<img src="./screenshots/login.png" width="50%" alt="Login" />
+<img src="./screenshots/login.png" width="30%" alt="Login" />
 
 ### User Dashboard
 
-<img src="./screenshots/dashboard.png" width="70%" alt="Dashboard">
+<img src="./screenshots/dashboard.png" width="50%" alt="Dashboard">
 
 ### Admin Dashbaord
 
-<img src="./screenshots/admin.png" width="70%" alt="Admin">
+<img src="./screenshots/admin.png" width="50%" alt="Admin">
 
 ### Create Entry
 
-<img src="./screenshots/create.png" width="50%" alt="Create">
+<img src="./screenshots/create.png" width="30%" alt="Create">
 
 ### View Entry
 
-<img src="./screenshots/view.png" width="70%" alt="View">
+<img src="./screenshots/view.png" width="30%" alt="View">
 
 ### Filters
 
-<img src="./screenshots/filters.png" width="70%" alt="Filters">
+<img src="./screenshots/filters.png" width="50%" alt="Filters">
 
 ---
 
